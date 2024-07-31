@@ -1,0 +1,199 @@
+---
+title: "Introduction to R"
+author: "Alvin Tan"
+date: "2024-07-31"
+format: html
+---
+
+_This tutorial contains some material from Aaron Chuey and Peter Zhu._
+
+This tutorial is an extremely brief introduction to R, covering the basics of (1) data import and wrangling, (2) data analysis, and (3) data visualisation.
+We won't be able to cover everything during this short tutorial, but it should teach you the basics of working with data in R.
+For starters, we're working in a Quarto Markdown document, which has bits of text (like this) and bits of code in code blocks like this:
+```{r}
+# I'm a code block!
+```
+
+# Packages
+Packages contain bits of code that other people have written, so you don't need to rewrite every function from scratch. 
+(They're very much like libraries in other programming languages).
+
+The very first time you use a package, you'll need to install it:
+```{r}
+install.packages("tidyverse")
+```
+
+Subsequently, if you want to use it, you just have to load it; remember to do this every time you load up your R session:
+```{r}
+library(tidyverse)
+```
+
+Here we've installed and loaded the package "tidyverse", which contains a bunch of useful functions for data manipulation and visualisation, which we'll use throughout the tutorial.
+
+# Data import and wrangling
+Tidyverse comes with a bunch of of useful functions for getting data into the right shape for analysis and visualisation; in this section we'll look at a few of these functions.
+
+## Data import
+Importing data from CSV files is relatively straightforward; you can just use the `read_csv` function:
+```{r}
+df <- read_csv("https://github.com/pzhu222/toddlerimprovement_cogsci2024/raw/main/data/expt2_data_toddlerimprovement.csv")
+```
+
+Note here that we use the assignment operator, `<-`, to put the data from the right hand side into the variable on the left hand side, which we've called `df` here.
+Data in R is typically stored in dataframes, which contain tabular data.
+We can see what these data look like using the `View` function:
+```{r}
+View(df)
+```
+
+These data come from one of Peter Zhu's studies; you can find more details about the method [here](https://github.com/pzhu222/toddlerimprovement_cogsci2024/blob/main/paper%2Bposter/Improvement_CogSci_Poster.pdf).
+In brief, children play with a control toy (which they're able to activate), and a test toy; they either quasi-randomly activate the test toy (in the stochastic condition), or are initially unable but later able to activate the test toy (in the improvement condition).
+Children are then allowed to select a toy to demonstrate to their caregiver, and we want to find out if they're more likely to choose the test toy in the improvement condition than the control condition.
+
+Note that the data are coded as follows:
+- condition: 0 = stochastic, 1 = improvement
+- side: 0 = test toy on left, 1 = test toy on right
+- choice: 0 = control toy selected, 1 = test toy selected
+- exclude: 0 = included, 1 = excluded
+
+## Descriptive statistics
+The first thing you might want to do is to look at some descriptive statistics about your data.
+This gives you a sense of what's in your data and how you might want to process it.
+For example, you might want to look at the mean age of your sample:
+```{r}
+mean(df$age)
+```
+
+**EXERCISE**
+How would you find the standard deviation of the age in the sample?
+```{r}
+# your code here:
+
+```
+
+You can also look at the gender split or the number of exclusions by using `count`:
+```{r}
+count(df, gender)
+count(df, exclude)
+```
+
+More generally, we can get a broad overview of the entire dataframe at once using the `summary` function:
+```{r}
+summary(df)
+```
+
+## Data wrangling
+### Filtering
+As you may have noticed, some of the data need to be excluded because of various errors. 
+To do so, we can use the `filter` function, which filters rows of the dataframe on the basis of some criterion.
+Here, we want to retain only the rows that were not excluded:
+```{r}
+df_filtered <- filter(df, exclude != 1)
+```
+The first argument of the function is the dataframe we want to operate on, while the second is the criterion, here expressed as a logical statement: "the value for exclude is not equal to 1". 
+
+**EXERCISE**
+Suppose we want to exclude children for whom we didn't collect gender information. 
+Create a new dataframe called `df_gender`, which removes children that have "Unknown" as their recorded gender.
+```{r}
+# your code here:
+
+```
+
+### Selecting
+Now that we've removed the excluded participants, we don't need to keep the exclusion columns around anymore.
+Let's get rid of them using the `select` function:
+```{r}
+df_selected <- select(df_filtered, -exclude, -exclude_reason)
+```
+
+Here we use the minus sign `-` to remove a column, but you could instead specify the columns you want to keep by listing them:
+```{r}
+df_selected <- select(df_filtered, id, age, gender, condition, side, choice)
+```
+
+### Mutating
+Sometimes we may want to modify the format of our columns to make them more suitable for analysis.
+For example, our `condition` column is currently in numeric format, but we might want it to be a factor (i.e., a categorical variable).
+We can do so with the `mutate` function:
+```{r}
+df_factored <- mutate(df_selected,
+                      condition_fct = factor(condition, 
+                                             labels = c("stochastic", "improvement")))
+```
+
+Note here that we've made a new column called `condition_fct`; if we had called this column `condition`, it would have overwritten the existing column.
+
+**EXERCISE**
+Create a new column called `age_bin`, which splits the `age` column based on whether the child is above or below the median age.
+Hint: You may want to use the function `ifelse` or `cut` to split into bins.
+```{r}
+# your code here:
+
+```
+
+### Grouping and summarising
+Sometimes you might want to get group-wise summaries of your data.
+For example, what was the gender split within each condition?
+We can do this by doing a `group_by` and a `summarise`:
+```{r}
+df_factored |> 
+  group_by(condition, gender) |> 
+  summarise(n = n())
+```
+
+Here we've put all of our grouping variables into the `group_by`, and we get the number of rows using the function `n`. 
+Notice that we've used the pipe `|>`, which puts the expression on the left hand side into the first argument of the function on the right hand side; this is really useful when you need to do multiple operations on the same dataframe.
+
+# Data analysis
+## T-test
+T-tests are useful when you have two samples, and want to know whether there is a significant difference in the values of the two samples.
+For example, in this case, we might want to know whether the two conditions are matched in age, just so we can exclude any possible age-related effects.
+Let's first get the ages for each condition:
+```{r}
+age_stochastic <- df_factored |> 
+  filter(condition_fct == "stochastic") |> 
+  pull(age)
+age_improvement <- df_factored |> 
+  filter(condition_fct == "improvement") |> 
+  pull(age)
+```
+
+We can then run an independent samples t-test to find out if there is an age difference:
+```{r}
+t.test(age_stochastic, age_improvement)
+```
+
+How do we interpret this result? 
+We can first look at the sample estimates, which give us a sense of the mean values of each group; these are very similar.
+We next look at the test statistic, in this case $t$; this is the statistic measuring the size of the observed difference between groups.
+The test statistic value is converted into a $p$-value, which tells us how unexpected the test statistic value is if the null hypothesis were true (in this case, that there is no difference between the ages of the conditions).
+In this case, the observed test statistic value is very likely under the null hypothesis (around 64%), so it's unlikely that there is a true difference in ages between the two conditions. 
+This is great! We would be surprised if there were a difference because the samples were randomly allocated, so the ages should be randomly distributed between the two conditions.
+
+## Regression
+Regressions are useful when we want to understand how one (or more) independent variable(s) affects one (or more) dependent variable(s).
+For example, in this case we want to understand how condition (stochastic vs improvement) affects choice of toy during demonstration (control or test).
+Because our outcome variable is binary in this case, we want to use a logistic regression (see blackboard).
+We can do this using the `glm` function from the `stats` package.
+
+```{r}
+mod_base <- glm(choice ~ condition,
+                data = df_factored,
+                family = "binomial")
+summary(mod_base)
+```
+
+How do we interpret these results?
+The intercept tells us the grand mean of the data, showing that on average slightly more children chose the control toy than the test toy (we can verify that just by looking at the data).
+The estimate for the condition tells us how much the improvement condition increases the likelihood of choosing the test toy, relative to the stochastic condition; in this case the estimate is positive, so children in the improvement condition were more likely to choose the test toy than the stochastic condition.
+The $p$-values (here expressed as a probability) reflect the likelihood that the observed values are due to the null hypothesis; in this case, the likelihood is very low, so the alternative hypothesis is favoured.
+In other words, the difference between conditions was significant, $p$ = .006.
+
+You may have noticed that the estimate value is larger than 1, even though our outcome value was only 0 or 1.
+This is because a logistic regression actually transforms the outcome variable in order to conduct the regression correctly; in this case it uses what's called a [logit](https://en.wikipedia.org/wiki/Logit) link.
+If you're interested in interpreting the size of the estimate, you may need to transform the estimates back into the scale of the outcome variable to understand what the size of the effect is.
+(You can read up more, or we can chat about this after!)
+
+
+
