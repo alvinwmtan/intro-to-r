@@ -195,5 +195,62 @@ This is because a logistic regression actually transforms the outcome variable i
 If you're interested in interpreting the size of the estimate, you may need to transform the estimates back into the scale of the outcome variable to understand what the size of the effect is.
 (You can read up more, or we can chat about this after!)
 
+**EXERCISE**
+Run another logistic regression, but this time also add age as a predictor.
+Look at the results. Is age a significant predictor of choice?
+```{r}
+# your code here:
+
+```
+
+# Data visualisation
+The last thing we'll do is to try to make that pretty plot that Peter had on his poster.
+In the plot, we have the data themselves (the points), as well as summary information (the mean and confidence interval).
+To make plots in the tidyverse, we use the function `ggplot` (short for "grammar of graphics").
+How this works is: we (1) initialise a plot with data, (2) specify how the data variables match onto visual variables, and (3) add layers corresponding to visual elements in the plot.
+
+```{r}
+ggplot(df_factored,
+       aes(x = condition_fct, 
+           y = choice,
+           col = condition_fct)) +
+  geom_jitter(height = 0, 
+              alpha = .3) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange")
+```
+
+Amazing! In a few lines of code, we've made a very intuitively understandable plot that helps us to have a great overview of the data.
+I'd usually recommend doing data visualisation much earlier in the process so you have a sense of what's actually in your data---sometimes the statistics themselves can obscure the patterns in your data! 
+(See the [Datasaurus Dozen](https://www.research.autodesk.com/publications/same-stats-different-graphs/) for a fun example.)
+
+**EXERCISE**
+Make the above plot again, but change the theme (see `ggtheme`) and make the labels more informative (using `labs`).
+```{r}
+# your code here:
+
+```
+
+# Challenge problem
+If you're well-versed enough in R, the above material should be easy for you.
+For an additional challenge, take a look at the `diamonds` dataset (from the `ggplot2` package).
+Can you predict the price on the basis of the other variables? 
+What's the best R^2 value you can get? See if you can beat my highscore (R^2 = .96).
+```{r}
+# your code here:
+
+```
+
+Make a plot of the data. Think about how you can map the (many different) data variables onto the (smaller number of) visual variables.
+```{r}
+# your code here:
+
+```
 
 
+# Conclusion
+That's it! Today we've gone through the basics of data wrangling, data analysis, and data visualisation.
+There's a lot more to discover, and what you'll need to learn also depends a lot on the kinds of data you're working with and the kinds of analyses you'll need to run.
+If you're interested in learning more, Hadley Wickham's [R for Data Science](https://r4ds.hadley.nz/) is an excellent introductory resource, and there are loads of resources and tutorials online.
+Also don't hesitate to send me a message on Slack/email if you have any questions.
+All the best, and have fun wrestling with your data!
