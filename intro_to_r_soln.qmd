@@ -12,7 +12,7 @@ We won't be able to cover everything during this short tutorial, but it should t
 For starters, we're working in a Quarto Markdown document, which has bits of text (like this) and bits of code in code blocks like this:
 ```{r}
 # I'm a code block!
-
+3 + 3
 ```
 
 # Packages
@@ -74,7 +74,7 @@ mean(df$age, na.rm=TRUE)
 How would you find the standard deviation of the age in the sample?
 ```{r}
 # your code here:
-
+sd(df$age, na.rm = TRUE)
 ```
 
 You can also look at the gender split or the number of exclusions by using `count`:
@@ -103,7 +103,7 @@ Suppose we want to exclude children for whom we didn't collect gender informatio
 Create a new dataframe called `df_gender`, which removes children that have "Unknown" as their recorded gender.
 ```{r}
 # your code here:
-
+df_gender <- filter(df, gender != "Unknown")
 ```
 
 ### Selecting
@@ -135,7 +135,9 @@ Create a new column called `age_bin`, which splits the `age` column based on whe
 Hint: You may want to use the function `ifelse` or `cut` to split into bins.
 ```{r}
 # your code here:
-
+df_binned <- mutate(df_factored,
+                    age_bin = ifelse(age > median(age, na.rm = TRUE),
+                                     "upper", "lower"))
 ```
 
 ### Grouping and summarising
@@ -220,8 +222,23 @@ ggplot(data = df_factored,
        mapping = aes(x = condition_fct,
                      y = choice,
                      colour = condition_fct)) +
+  geom_jitter(height = 0, alpha = 0.3) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange")
+```
+
+
+
+
+
+
+```{r}
+ggplot(df_factored,
+       aes(x = condition_fct, 
+           y = choice,
+           col = condition_fct)) +
   geom_jitter(height = 0, 
-              alpha = 0.3) +
+              alpha = .3) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "pointrange")
 ```
@@ -252,6 +269,7 @@ Make a plot of the data. Think about how you can map the (many different) data v
 # your code here:
 
 ```
+
 
 # Conclusion
 That's it! Today we've gone through the basics of data wrangling, data analysis, and data visualisation.
