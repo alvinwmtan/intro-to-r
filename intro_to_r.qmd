@@ -12,6 +12,7 @@ We won't be able to cover everything during this short tutorial, but it should t
 For starters, we're working in a Quarto Markdown document, which has bits of text (like this) and bits of code in code blocks like this:
 ```{r}
 # I'm a code block!
+3 + 3
 ```
 
 # Packages
@@ -46,6 +47,11 @@ We can see what these data look like using the `View` function:
 View(df)
 ```
 
+Another option for a quick look is `glimpse`:
+```{r}
+glimpse(df)
+```
+
 These data come from one of Peter Zhu's studies; you can find more details about the method [here](https://github.com/pzhu222/toddlerimprovement_cogsci2024/blob/main/paper%2Bposter/Improvement_CogSci_Poster.pdf).
 In brief, children play with a control toy (which they're able to activate), and a test toy; they either quasi-randomly activate the test toy (in the stochastic condition), or are initially unable but later able to activate the test toy (in the improvement condition).
 Children are then allowed to select a toy to demonstrate to their caregiver, and we want to find out if they're more likely to choose the test toy in the improvement condition than the control condition.
@@ -61,14 +67,14 @@ The first thing you might want to do is to look at some descriptive statistics a
 This gives you a sense of what's in your data and how you might want to process it.
 For example, you might want to look at the mean age of your sample:
 ```{r}
-mean(df$age)
+mean(df$age, na.rm=TRUE)
 ```
 
 **EXERCISE**
 How would you find the standard deviation of the age in the sample?
 ```{r}
 # your code here:
-
+sd(df$age, na.rm = TRUE)
 ```
 
 You can also look at the gender split or the number of exclusions by using `count`:
@@ -97,7 +103,7 @@ Suppose we want to exclude children for whom we didn't collect gender informatio
 Create a new dataframe called `df_gender`, which removes children that have "Unknown" as their recorded gender.
 ```{r}
 # your code here:
-
+df_gender <- filter(df, gender != "Unknown")
 ```
 
 ### Selecting
@@ -129,7 +135,9 @@ Create a new column called `age_bin`, which splits the `age` column based on whe
 Hint: You may want to use the function `ifelse` or `cut` to split into bins.
 ```{r}
 # your code here:
-
+df_binned <- mutate(df_factored,
+                    age_bin = ifelse(age > median(age, na.rm = TRUE),
+                                     "upper", "lower"))
 ```
 
 ### Grouping and summarising
@@ -208,6 +216,21 @@ The last thing we'll do is to try to make that pretty plot that Peter had on his
 In the plot, we have the data themselves (the points), as well as summary information (the mean and confidence interval).
 To make plots in the tidyverse, we use the function `ggplot` (short for "grammar of graphics").
 How this works is: we (1) initialise a plot with data, (2) specify how the data variables match onto visual variables, and (3) add layers corresponding to visual elements in the plot.
+
+```{r}
+ggplot(data = df_factored,
+       mapping = aes(x = condition_fct,
+                     y = choice,
+                     colour = condition_fct)) +
+  geom_jitter(height = 0, alpha = 0.3) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange")
+```
+
+
+
+
+
 
 ```{r}
 ggplot(df_factored,
