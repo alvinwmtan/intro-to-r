@@ -208,7 +208,10 @@ Run another logistic regression, but this time also add age as a predictor.
 Look at the results. Is age a significant predictor of choice?
 ```{r}
 # your code here:
-
+mod_age <- glm(choice ~ condition * age,
+               data = df_factored,
+               family = "binomial")
+summary(mod_age)
 ```
 
 # Data visualisation
@@ -222,23 +225,8 @@ ggplot(data = df_factored,
        mapping = aes(x = condition_fct,
                      y = choice,
                      colour = condition_fct)) +
-  geom_jitter(height = 0, alpha = 0.3) +
-  stat_summary(fun.data = "mean_cl_boot",
-               geom = "pointrange")
-```
-
-
-
-
-
-
-```{r}
-ggplot(df_factored,
-       aes(x = condition_fct, 
-           y = choice,
-           col = condition_fct)) +
   geom_jitter(height = 0, 
-              alpha = .3) +
+              alpha = 0.3) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "pointrange")
 ```
@@ -251,7 +239,18 @@ I'd usually recommend doing data visualisation much earlier in the process so yo
 Make the above plot again, but change the theme (see `ggtheme`) and make the labels more informative (using `labs`).
 ```{r}
 # your code here:
-
+ggplot(data = df_factored,
+       mapping = aes(x = condition_fct,
+                     y = choice,
+                     colour = condition_fct)) +
+  geom_jitter(height = 0, 
+              alpha = 0.3) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange") +
+  theme_bw() +
+  labs(x = "Condition",
+       y = "Choice of test toy",
+       colour = "Condition")
 ```
 
 # Challenge problem
@@ -269,7 +268,6 @@ Make a plot of the data. Think about how you can map the (many different) data v
 # your code here:
 
 ```
-
 
 # Conclusion
 That's it! Today we've gone through the basics of data wrangling, data analysis, and data visualisation.
