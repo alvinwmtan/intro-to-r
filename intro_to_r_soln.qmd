@@ -1,7 +1,7 @@
 ---
 title: "Introduction to R"
 author: "Alvin Tan"
-date: "2024-07-31"
+date: "2026-07-16"
 format: html
 ---
 
@@ -260,13 +260,20 @@ Can you predict the price on the basis of the other variables?
 What's the best R^2 value you can get? See if you can beat my highscore (R^2 = .96).
 ```{r}
 # your code here:
-
+mod_diamonds <- lm(price ~ exp(carat) * cut * color * clarity, data = diamonds)
+mod_diamonds |> summary()
 ```
 
 Make a plot of the data. Think about how you can map the (many different) data variables onto the (smaller number of) visual variables.
 ```{r}
 # your code here:
-
+diamonds |> 
+  ggplot(aes(x = exp(carat), y = price, col = cut, shape = color)) +
+  geom_point(alpha = .1) +
+  facet_wrap(~ clarity) +
+  coord_cartesian(xlim = c(0, exp(3))) +
+  theme_bw() +
+  theme(panel.grid = element_blank())
 ```
 
 # Conclusion
